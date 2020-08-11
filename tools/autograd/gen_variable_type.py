@@ -585,6 +585,8 @@ def format_return_variables(declaration):
 
     def get_return_value():
         if inplace:
+            if len(declaration['returns']) > 0 and declaration['returns'][0]['dynamic_type'] == 'TensorList':
+                return 'self.vec()'
             return 'self'
         if is_out_fn:
             return_names = [arg['name'] for arg in arguments

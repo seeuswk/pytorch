@@ -55,6 +55,12 @@ inline void check_inplace(const Tensor& tensor) {
   }
 }
 
+inline void check_inplace(const TensorList tensors) {
+  for (const auto& tensor : tensors) {
+    check_inplace(tensor);
+  }
+}
+
 inline void throw_error_out_requires_grad(const char* name) {
   AT_ERROR(
       name, "(): functions with out=... arguments don't support automatic differentiation, "
@@ -86,6 +92,11 @@ inline void rebase_history(std::vector<Variable>&& vars, std::shared_ptr<Node> g
 
 inline void increment_version(Tensor & t) {
   impl::bump_version(t);
+}
+
+inline void increment_version(at::TensorList tensors) {
+  for (auto & t : tensors)
+    impl::bump_version(t);
 }
 
 struct Flatten : IterArgs<Flatten> {
