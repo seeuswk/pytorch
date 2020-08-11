@@ -7,6 +7,33 @@ class TestForeach(TestCase):
     H = 20
     W = 20
 
+    # Unary ops
+    @dtypes(*[torch.int32, torch.half, torch.float, torch.double, torch.complex64, torch.complex128])
+    def test_sqrt(self, device, dtype):
+        if dtype in [torch.bool, torch.int,torch.half,]:
+            return
+        tensors = [torch.ones(self.H, self.W, device=device, dtype=dtype) for _ in range(self.N)]
+
+        res = torch._foreach_sqrt(tensors)
+        torch._foreach_sqrt_(tensors)
+
+        self.assertEqual([torch.sqrt(torch.ones(self.H, self.W, device=device, dtype=dtype)) for _ in range(self.N)], res)
+        self.assertEqual(tensors, res)
+
+    @dtypes(*[torch.int32, torch.half, torch.float, torch.double, torch.complex64, torch.complex128])
+    def test_exp(self, device, dtype):
+        if dtype in [torch.bool, torch.int,torch.half,]:
+            return
+
+        tensors = [torch.ones(self.H, self.W, device=device, dtype=dtype) for _ in range(self.N)]
+
+        res = torch._foreach_exp(tensors)
+        torch._foreach_exp_(tensors)
+
+        self.assertEqual([torch.exp(torch.ones(self.H, self.W, device=device, dtype=dtype)) for _ in range(self.N)], res)
+        self.assertEqual(tensors, res)
+
+    # Ops with scalar
     @dtypes(*torch.testing.get_all_dtypes())
     def test_add_scalar__same_size_tensors(self, device, dtype):
         tensors = [torch.zeros(self.H, self.W, device=device, dtype=dtype) for _ in range(self.N)]
@@ -165,6 +192,7 @@ class TestForeach(TestCase):
         for t in tensors:
             self.assertEqual(t, torch.ones(self.H, self.W, device=device, dtype=dtype).div(2))
 
+    # Ops with list
     @dtypes(*torch.testing.get_all_dtypes())
     def test_bin_op_list_same_size_tensors(self, device, dtype):
         if dtype == torch.bool:
