@@ -251,7 +251,8 @@ Context::Context(const bool enable_validation_layers)
       device_(create_device(physical_device(), compute_queue_family_index_), &VK_DELETER(Device)),
       queue_(acquire_queue(device(), compute_queue_family_index_)),
       shader_(device()),
-      pipeline_(device()) {
+      pipeline_(device()),
+      descriptor_(device()) {
 }
 
 Context* initialize() {

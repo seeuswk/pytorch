@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ATen/native/vulkan/api/Common.h>
+#include <ATen/native/vulkan/api/Descriptor.h>
 #include <ATen/native/vulkan/api/Pipeline.h>
 #include <ATen/native/vulkan/api/Shader.h>
 
@@ -42,6 +43,10 @@ class Context final {
     return pipeline_;
   }
 
+  inline Descriptor& descriptor() {
+    return descriptor_;
+  }
+
  private:
   // Construction and destruction order matters.  Do not move members around.
   Handle<VkInstance, decltype(&VK_DELETER(Instance))> instance_;
@@ -52,6 +57,7 @@ class Context final {
   VkQueue queue_;
   Shader shader_;
   Pipeline pipeline_;
+  Descriptor descriptor_;
 };
 
 bool available();
