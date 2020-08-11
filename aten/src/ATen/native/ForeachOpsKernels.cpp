@@ -11,6 +11,7 @@ std::vector<Tensor> foreach_add_scalar_kernel_fallback(TensorList tensors, Scala
     auto temp = t.add(scalar);
     result.emplace_back(temp);
   }
+
   return result;
 }
 
@@ -22,6 +23,28 @@ std::vector<Tensor> foreach_add_scalar_kernel_fallback_(TensorList tensors, Scal
   }
 
   return tensors.vec();
+}
+
+std::vector<Tensor> foreach_add_list_kernel_fallback(TensorList tensors1, TensorList tensors2) {
+  verify_list(tensors1, tensors2);
+
+  std::vector<Tensor> result;
+  for (int i = 0; i < tensors1.size(); i++) {
+    auto temp = tensors1[i].add(tensors2[i]);
+    result.emplace_back(temp);
+  }
+
+  return result;
+}
+
+std::vector<Tensor> foreach_add_list_kernel_fallback_(TensorList tensors1, TensorList tensors2) {
+  verify_list(tensors1, tensors2);
+
+  for (int i = 0; i < tensors1.size(); i++) {
+    tensors1[i].add_(tensors2[i]);
+  }
+
+  return tensors1.vec();
 }
 
 }} // namespace at::native
