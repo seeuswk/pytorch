@@ -140,6 +140,9 @@ def add_observer_(module, non_leaf_module_list=None, device=None, prehook=None):
         # All post forward hooks are preserved and will be executed after the observer before convert
         handle = register_activation_post_process_hook(module)
         module._forward_hooks.move_to_end(handle.id, last=False)
+        if prehook is not None:
+            module.add_module('activation_pre_process', prehook())
+            module.register_forward_pre_hook(_observer_forward_pre_hook)
 
         # Attaching prehook
         if prehook is not None:
