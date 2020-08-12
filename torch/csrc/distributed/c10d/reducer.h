@@ -34,11 +34,15 @@ class Reducer {
 
   ~Reducer() noexcept(false);
 
-  // To (re-)initialize bucket assignment, pass a list of buckets, each
-  // of which is specified by a list of indices in the variables list.
-  // This function performs validation that the variables within a bucket
-  // all live on the same device and have the same dimensionality.
-  void initialize_buckets(std::vector<std::vector<size_t>> bucket_indices);
+  // This funcation is called before forward compuation, e.g.
+  // rebuildBuckets and let grads point to bucket tensors. This
+  // can help saving peak memory usage and avoid copies btw grads and
+  // bucket tensors.
+  // It may allocate new buckets before deallocating old buckets
+  // inside rebuildBuckets. To save peak memory usage,
+  // call rebuildBuckets before the peak memory usage increases
+  // during forward computation.
+  void prepare_forward();
 
   // This function is called when the forward function has produced an output,
   // and the user wishes to reduce gradients in the backwards pass.
@@ -123,9 +127,16 @@ class Reducer {
 
   void finalize_backward();
 
+  // To (re-)initialize bucket assignment, pass a list of buckets, each
+  // of which is specified by a list of indices in the variables list.
+  // This function performs validation that the variables within a bucket
+  // all live on the same device and have the same dimensionality.
+  void initialize_buckets(std::vector<std::vector<size_t>> bucket_indices);
+
   // Broadcast rebuilt buckets from rank 0 to other ranks before initializing
   // the buckets
   void sync_bucket_indices(std::vector<std::vector<size_t>>& bucket_indices);
+
   // Rebuild buckets based on rebuilt_params_ and rebuilt_param_indices_
   // TODO this function makes broadcast communication call and
   // could be overlapped with next forward() call, thus
@@ -135,7 +146,7 @@ class Reducer {
   // and parameter indices order may change more frequently.
   // For find_unused_parameters = false case, buckets are only rebuilt once,
   // the performance cost is negligible.
-  std::vector<std::vector<size_t>> rebuildBuckets();
+  void rebuildBuckets();
 
   using GradCallback =
       torch::distributed::autograd::DistAutogradContext::GradCallback;
@@ -193,7 +204,10 @@ class Reducer {
   // function call in `finalize_backward` happens only if DDP communication hook
   // was registered to recrate views with the result of `future_work`. Before
   // `finalize_backward` call, views must be cleared.
-  void initialize_bucketviews(BucketReplica& replica, at::Tensor& contents);
+  void initialize_bucketviews(
+      BucketReplica& replica,
+      at::Tensor& contents,
+      bool copy_to_bucket_view);
 
   // A bucket holds N bucket replicas (1 per model replica).
   //
